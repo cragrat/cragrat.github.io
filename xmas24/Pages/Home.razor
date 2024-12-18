@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Timers;
+@using System.Diagnostics
 
 
 <PageTitle>Happy Xmas From The Aliens</PageTitle>
@@ -22,8 +23,6 @@
 @code {
 
     private Size Size = new Size();
-    private const string V = "images/KS.png";
-    private double FPS;
     private Canvas2DContext Ctx;
     private BECanvasComponent CanvasReference;
     private CanvasHelper CanvasHelper;
@@ -50,9 +49,9 @@
     /// <summary>
     /// Called by CanvasHelper whenever we are ready to render a frame
     /// </summary>
-    /// <param name="fps"></param>
+    /// <param ></param>
     /// <returns></returns>
-    public async Task RenderFrame(double fps)
+    public async Task RenderFrame()
     {
         // The following code is adapted from Scott Harden's EXCELLENT blog post, 
         // "Draw Animated Graphics in the Browser with Blazor WebAssembly"
@@ -72,15 +71,31 @@
         await this.Ctx.SetFillStyleAsync("#FFFFFF");
         await this.Ctx.FillTextAsync("Happy Xmas From The Aliens", 10, 30);
 
-        // await this.Ctx.SetFontAsync("16px consolas");
-        // await this.Ctx.FillTextAsync($"FPS: {fps:0.000}", 10, 50);
         if (AddBall > 0)
         {
             await this.Ctx.SetStrokeStyleAsync("#FFFFFF");
             foreach (var ball in BallField.Balls)
             {
                 await this.Ctx.BeginPathAsync();
-                await this.Ctx.ArcAsync(ball.X, ball.Y, ball.R, 0, 2 * Math.PI, false);
+                switch (ball.Shape)
+                {
+                    case 1:
+                        await this.Ctx.ArcAsync(ball.X, ball.Y, ball.R, 0, 2 * Math.PI, false);
+                        break;
+                    case 2:
+                        await this.Ctx.MoveToAsync(ball.X, ball.Y);
+                        await this.Ctx.LineToAsync(ball.X, ball.Y + 200);
+                        await this.Ctx.LineToAsync(ball.X + 200, ball.Y);
+                        await this.Ctx.ClosePathAsync();
+                        break;
+                    case 0:
+                        await this.Ctx.MoveToAsync(ball.X, ball.Y);
+                        await this.Ctx.LineToAsync(ball.X, ball.Y + 150);
+                        await this.Ctx.LineToAsync(ball.X + 150, ball.Y+150);
+                        await this.Ctx.LineToAsync(ball.X + 150, ball.Y);
+                        await this.Ctx.ClosePathAsync();
+                        break;
+                }
                 await this.Ctx.SetFillStyleAsync(ball.Color);
                 await this.Ctx.FillAsync();
                 await this.Ctx.StrokeAsync();

@@ -11,10 +11,11 @@ public class Ball
     public double YVel { get; private set; }
     public double R { get; private set; }
     public string Color { get; private set; }
+    public int Shape { get; private set; }
 
-    public Ball(double x, double y, double xVel, double yVel, double radius, string color)
+    public Ball(double x, double y, double xVel, double yVel, double radius, string color, int shape)
     {
-        (X, Y, XVel, YVel, R, Color) = (x, y, xVel, yVel, radius, color);
+        (X, Y, XVel, YVel, R, Color, Shape) = (x, y, xVel, yVel, radius, color, shape);
     }
 
     public void StepForward(double width, double height)
