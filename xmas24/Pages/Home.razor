@@ -1,0 +1,142 @@
+﻿@page "/"
+@using System.Timers;
+
+
+<PageTitle>Happy Xmas From The Aliens</PageTitle>
+<div hidden="@showPanel2">
+<CanvasHelper 
+    @ref="CanvasHelper"
+    CanvasResized="CanvasResized" 
+    RenderFrame="RenderFrame"
+    MouseDown="MouseDown"
+    MouseUp="MouseUp"
+    MouseMove="MouseMove">
+
+        <BECanvas Width="600" Height="400" @ref="CanvasReference"></BECanvas>
+
+</CanvasHelper>
+</div>
+<div hidden="@(!showPanel2)">
+    <img src="images/final.jpg"/>
+</div>
+@code {
+
+    private Size Size = new Size();
+    private const string V = "images/KS.png";
+    private double FPS;
+    private Canvas2DContext Ctx;
+    private BECanvasComponent CanvasReference;
+    private CanvasHelper CanvasHelper;
+    static Field BallField = new Field();
+    static int AddBall = 1;
+    static Timer BallTimer = new Timer(1000);
+    static bool showPanel2 = false;
+    static string imageSource = "images/final.png";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Create the canvas and context
+            Ctx = await CanvasReference.CreateCanvas2DAsync();
+            // Initialize the helper
+            await CanvasHelper.Initialize();
+            BallTimer.Elapsed += NewBallTick;
+            // Enable the Timer
+            BallTimer.Enabled = true;
+        }
+    }
+
+    /// <summary>
+    /// Called by CanvasHelper whenever we are ready to render a frame
+    /// </summary>
+    /// <param name="fps"></param>
+    /// <returns></returns>
+    public async Task RenderFrame(double fps)
+    {
+        // The following code is adapted from Scott Harden's EXCELLENT blog post, 
+        // "Draw Animated Graphics in the Browser with Blazor WebAssembly"
+        // https://swharden.com/blog/2021-01-07-blazor-canvas-animated-graphics/
+
+
+
+        BallField.StepForward();
+
+        await this.Ctx.BeginBatchAsync();
+
+        await this.Ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
+        await this.Ctx.SetFillStyleAsync("#003366");
+        await this.Ctx.FillRectAsync(0, 0, BallField.Width, BallField.Height);
+
+        await this.Ctx.SetFontAsync("32px Segoe UI");
+        await this.Ctx.SetFillStyleAsync("#FFFFFF");
+        await this.Ctx.FillTextAsync("Happy Xmas From The Aliens", 10, 30);
+
+        // await this.Ctx.SetFontAsync("16px consolas");
+        // await this.Ctx.FillTextAsync($"FPS: {fps:0.000}", 10, 50);
+        if (AddBall > 0)
+        {
+            await this.Ctx.SetStrokeStyleAsync("#FFFFFF");
+            foreach (var ball in BallField.Balls)
+            {
+                await this.Ctx.BeginPathAsync();
+                await this.Ctx.ArcAsync(ball.X, ball.Y, ball.R, 0, 2 * Math.PI, false);
+                await this.Ctx.SetFillStyleAsync(ball.Color);
+                await this.Ctx.FillAsync();
+                await this.Ctx.StrokeAsync();
+            }
+        } else
+        {
+            await this.Ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
+            await this.Ctx.SetFillStyleAsync("#003366");
+            await this.Ctx.FillRectAsync(0, 0, BallField.Width, BallField.Height);
+
+        }
+
+        await this.Ctx.EndBatchAsync();
+    }
+
+    private static void NewBallTick(Object source, ElapsedEventArgs e)
+    {
+        if (AddBall == 1)
+        {
+            if (BallField.Balls.Count <= 20)
+                BallField.AddRandomBalls(1);
+            else
+                AddBall = 2;
+        }
+        else
+        {
+            showPanel2 = true;
+        }
+
+    }
+
+    /// <summary>
+    /// Called by CanvasHelper whenever the browser is resized.
+    /// </summary>
+    /// <param name="size"></param>
+    public void CanvasResized(Size size)
+    {
+        Size = size;
+        BallField.Resize(size.Width, size.Height);
+    }
+    
+    // Handle mouse down events
+    void MouseDown(CanvasMouseArgs args)
+    {
+        
+    }
+
+    // Handle mouse up events
+    void MouseUp(CanvasMouseArgs args)
+    {
+        
+    }
+
+    // Handle mouse move events
+    void MouseMove(CanvasMouseArgs args)
+    {
+        
+    }
+}
