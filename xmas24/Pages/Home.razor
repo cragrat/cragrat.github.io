@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using System.Timers;
 @using System.Diagnostics
+@using System.Numerics;
 
 
 <PageTitle>Happy Xmas From The Aliens</PageTitle>
@@ -18,7 +19,7 @@
 </CanvasHelper>
 </div>
 <div hidden="@(!showPanel2)">
-    <img src="images/final.jpg"/>
+    <img src="images/final.jpg" max-width: 100%  />
 </div>
 @code {
 
@@ -26,12 +27,21 @@
     private Canvas2DContext Ctx;
     private BECanvasComponent CanvasReference;
     private CanvasHelper CanvasHelper;
+    private List<Vector2> vectors;
     static Field BallField = new Field();
     static int AddBall = 1;
     static Timer BallTimer = new Timer(1000);
     static bool showPanel2 = false;
     static string imageSource = "images/final.png";
 
+    protected override void OnInitialized()
+    {
+        Size.Width = 800;
+        Size.Height = 600;
+        vectors = KochSnowflake.GetKochSnowflake(200, 2);
+    }
+    
+    
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -57,8 +67,6 @@
         // "Draw Animated Graphics in the Browser with Blazor WebAssembly"
         // https://swharden.com/blog/2021-01-07-blazor-canvas-animated-graphics/
 
-
-
         BallField.StepForward();
 
         await this.Ctx.BeginBatchAsync();
@@ -71,6 +79,7 @@
         await this.Ctx.SetFillStyleAsync("#FFFFFF");
         await this.Ctx.FillTextAsync("Happy Xmas From The Aliens", 10, 30);
 
+        
         if (AddBall > 0)
         {
             await this.Ctx.SetStrokeStyleAsync("#FFFFFF");
@@ -79,16 +88,17 @@
                 await this.Ctx.BeginPathAsync();
                 switch (ball.Shape)
                 {
-                    case 1:
+                    case 1: // circle
                         await this.Ctx.ArcAsync(ball.X, ball.Y, ball.R, 0, 2 * Math.PI, false);
                         break;
-                    case 2:
-                        await this.Ctx.MoveToAsync(ball.X, ball.Y);
-                        await this.Ctx.LineToAsync(ball.X, ball.Y + 200);
-                        await this.Ctx.LineToAsync(ball.X + 200, ball.Y);
-                        await this.Ctx.ClosePathAsync();
+                    case 2: // koch snow flake
+                        //await this.Ctx.MoveToAsync(ball.X, ball.Y);
+                        for (var i = 0; i < vectors.Count - 1; i++)
+                        {
+                            await this.Ctx.LineToAsync(ball.X + vectors[i].X, ball.Y+vectors[i].Y);
+                        }
                         break;
-                    case 0:
+                    case 0: //square
                         await this.Ctx.MoveToAsync(ball.X, ball.Y);
                         await this.Ctx.LineToAsync(ball.X, ball.Y + 150);
                         await this.Ctx.LineToAsync(ball.X + 150, ball.Y+150);
@@ -105,7 +115,6 @@
             await this.Ctx.ClearRectAsync(0, 0, BallField.Width, BallField.Height);
             await this.Ctx.SetFillStyleAsync("#003366");
             await this.Ctx.FillRectAsync(0, 0, BallField.Width, BallField.Height);
-
         }
 
         await this.Ctx.EndBatchAsync();
